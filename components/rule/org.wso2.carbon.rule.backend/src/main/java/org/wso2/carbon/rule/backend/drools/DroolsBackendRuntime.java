@@ -18,12 +18,16 @@ package org.wso2.carbon.rule.backend.drools;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.drools.KnowledgeBase;
-import org.drools.builder.*;
-import org.drools.definition.KnowledgePackage;
-import org.drools.io.ResourceFactory;
-import org.drools.runtime.StatefulKnowledgeSession;
-import org.drools.runtime.StatelessKnowledgeSession;
+//import org.drools.KnowledgeBase;
+//import org.drools.builder.*;
+//import org.drools.definition.KnowledgePackage;
+//import org.drools.io.ResourceFactory;
+//import org.drools.runtime.StatefulKnowledgeSession;
+//import org.drools.runtime.StatelessKnowledgeSession;
+import org.kie.api.KieBase;
+import org.kie.api.KieServices;
+import org.kie.api.builder.KieBuilder;
+import org.kie.api.runtime.KieSession;
 import org.wso2.carbon.rule.backend.util.RuleSetLoader;
 import org.wso2.carbon.rule.common.Rule;
 import org.wso2.carbon.rule.common.RuleSet;
@@ -39,14 +43,21 @@ import java.util.Collection;
 public class DroolsBackendRuntime implements RuleBackendRuntime {
 
     private static Log log = LogFactory.getLog(DroolsBackendRuntime.class);
-    private KnowledgeBase knowledgeBase;
-    private KnowledgeBuilder knowledgeBuilder;
+//    private KnowledgeBase knowledgeBase;
+//    private KnowledgeBuilder knowledgeBuilder;
+    private KieBase kieBase;
+    private KieServices kieServices;
     private ClassLoader classLoader;
 
-    public DroolsBackendRuntime(KnowledgeBase knowledgeBase,
-                                KnowledgeBuilder knowledgeBuilder, ClassLoader classLoader) {
-        this.knowledgeBase = knowledgeBase;
-        this.knowledgeBuilder = knowledgeBuilder;
+//    public DroolsBackendRuntime(KnowledgeBase knowledgeBase,
+//                                KnowledgeBuilder knowledgeBuilder, ClassLoader classLoader) {
+//        this.knowledgeBase = knowledgeBase;
+//        this.knowledgeBuilder = knowledgeBuilder;
+//        this.classLoader = classLoader;
+//    }
+    public DroolsBackendRuntime(KieBase kieBase, KieServices kieServices, ClassLoader classLoader) {
+        this.kieBase = kieBase;
+        this.kieServices = kieServices;
         this.classLoader = classLoader;
     }
 
@@ -63,7 +74,7 @@ public class DroolsBackendRuntime implements RuleBackendRuntime {
                             "Error in rule service configuration : Select \"dtable\" as Resource Type for decision tables "
                                                                         + "or attached file is not supported by rule engine");
                 } else {
-                    this.knowledgeBuilder.add(ResourceFactory.newInputStreamResource(ruleInputStream), ResourceType.DRL);
+//                    this.knowledgeBuilder.add(ResourceFactory.newInputStreamResource(ruleInputStream), ResourceType.DRL);
                 }
 
             } else if (rule.getResourceType().equals(Constants.RULE_RESOURCE_TYPE_DTABLE)) {
@@ -76,30 +87,30 @@ public class DroolsBackendRuntime implements RuleBackendRuntime {
                             "Error in rule service configuration : Select \"regular\" as Resource Type for regular rules "
                                                                         + "or attached file is not supported by rule engine");
                 } else {
-                    DecisionTableConfiguration dtconf = KnowledgeBuilderFactory.newDecisionTableConfiguration();
+//                    DecisionTableConfiguration dtconf = KnowledgeBuilderFactory.newDecisionTableConfiguration();
 
                     //check whether the decision tables is base on .xsl file of .csv format (inline input or .csv file input)
                     if (rule.getSourceType().equalsIgnoreCase(Constants.RULE_SOURCE_TYPE_INLINE) ||
                                                                     rule.getValue().lastIndexOf(".csv") > 0) {
                         //decision table in .xls format
-                        dtconf.setInputType(DecisionTableInputType.CSV);
+//                        dtconf.setInputType(DecisionTableInputType.CSV);
                     } else {
                         //decision table in .xls format
-                        dtconf.setInputType(DecisionTableInputType.XLS);
+//                        dtconf.setInputType(DecisionTableInputType.XLS);
                     }
-                    this.knowledgeBuilder.add(ResourceFactory.newInputStreamResource(ruleInputStream),
-                                              ResourceType.DTABLE, dtconf);
+//                    this.knowledgeBuilder.add(ResourceFactory.newInputStreamResource(ruleInputStream),
+//                                              ResourceType.DTABLE, dtconf);
                 }
 
             }
 
-            if (this.knowledgeBuilder.hasErrors()) {
-                throw new RuleConfigurationException("Error during creating rule set: " +
-                        this.knowledgeBuilder.getErrors());
-            }
-
-            Collection<KnowledgePackage> pkgs = this.knowledgeBuilder.getKnowledgePackages();
-            this.knowledgeBase.addKnowledgePackages(pkgs);
+//            if (this.knowledgeBuilder.hasErrors()) {
+//                throw new RuleConfigurationException("Error during creating rule set: " +
+//                        this.knowledgeBuilder.getErrors());
+//            }
+//
+//            Collection<KnowledgePackage> pkgs = this.knowledgeBuilder.getKnowledgePackages();
+//            this.knowledgeBase.addKnowledgePackages(pkgs);
         }
 
     }
@@ -107,19 +118,21 @@ public class DroolsBackendRuntime implements RuleBackendRuntime {
     public Session createSession(int type) throws RuleRuntimeException {
 
         Session sesson;
+        KieSession kieSession;
         if (type == Constants.RULE_STATEFUL_SESSION) {
 
-            StatefulKnowledgeSession ruleSession =
-                    this.knowledgeBase.newStatefulKnowledgeSession();
-
-            if (ruleSession == null) {
-                throw new RuleRuntimeException("The created stateful rule session is null");
-            }
-            sesson = new DroolsStatefulSession(ruleSession);
+//            StatefulKnowledgeSession ruleSession =
+//                    this.knowledgeBase.newStatefulKnowledgeSession();
+//
+//            if (ruleSession == null) {
+//                throw new RuleRuntimeException("The created stateful rule session is null");
+//            }
+//            sesson = new DroolsStatefulSession(ruleSession);
         } else {
             if (log.isDebugEnabled()) {
                 log.debug("Using stateless rule session");
             }
+            log.info("Using stateless rule session");
             // create stateless rule session
             /**
                 Due to drools have deprecated knowledgeBase usage, some classes have already unsupported,
@@ -129,14 +142,15 @@ public class DroolsBackendRuntime implements RuleBackendRuntime {
             StatelessKnowledgeSession ruleSession = knowledgeBase.newStatelessKnowledgeSession();
             */
 
-            StatefulKnowledgeSession ruleSession = knowledgeBase.newStatefulKnowledgeSession();
-
-            if (ruleSession == null) {
-                throw new RuleRuntimeException("The created stateless rule session is null");
-            }
-            sesson = new DroolsStatelessSession(ruleSession);
+//            StatefulKnowledgeSession ruleSession = knowledgeBase.newStatefulKnowledgeSession();
+//
+//            if (ruleSession == null) {
+//                throw new RuleRuntimeException("The created stateless rule session is null");
+//            }
+//            sesson = new DroolsStatelessSession(ruleSession);
         }
-        return sesson;
+//        return sesson;
+        return null;
     }
 
 

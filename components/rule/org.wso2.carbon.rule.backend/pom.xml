@@ -29,6 +29,10 @@
     <packaging>bundle</packaging>
     <name>WSO2 Carbon - Rule Backend</name>
 
+    <properties>
+        <drools.version>8.44.0.Final</drools.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.wso2.carbon</groupId>
@@ -46,23 +50,71 @@
             <groupId>org.wso2.carbon.rules</groupId>
             <artifactId>org.wso2.carbon.rule.common</artifactId>
         </dependency>
-
         <dependency>
             <!--groupId>org.drools.wso2</groupId-->
             <groupId>org.wso2.orbit.org.drools</groupId>
             <artifactId>drools</artifactId>
         </dependency>
 
+<!--        <dependency>-->
+<!--            <groupId>org.drools</groupId>-->
+<!--            <artifactId>drools-engine</artifactId>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.drools</groupId>-->
+<!--            <artifactId>drools-model-compiler</artifactId>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.drools</groupId>-->
+<!--            <artifactId>drools-xml-support</artifactId>-->
+<!--        </dependency>-->
+
         <!--Need to verify drools-jsr94 is required : currently required for test cases-->
         <dependency>
             <groupId>org.drools</groupId>
             <artifactId>drools-jsr94</artifactId>
             <version>6.3.0.Final</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.drools</groupId>
+                    <artifactId>drools-decisiontables</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.drools</groupId>
+                    <artifactId>drools-templates</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.drools</groupId>-->
+<!--            <artifactId>drools-compiler</artifactId>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-engine</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-model-compiler</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-xml-support</artifactId>
+        </dependency>
+<!--      drools-mvel is deprecated  -->
+<!--        <dependency>-->
+<!--            <groupId>org.drools</groupId>-->
+<!--            <artifactId>drools-mvel</artifactId>-->
+<!--            <version>8.44.0.Final</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.kie</groupId>
+            <artifactId>kie-internal</artifactId>
         </dependency>
     </dependencies>
 
@@ -75,6 +127,11 @@
 		<configuration>
                     <argLine>${argLine}</argLine>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.kie</groupId>
+                <artifactId>kie-maven-plugin</artifactId>
+                <extensions>true</extensions>
             </plugin>
 
             <plugin>
