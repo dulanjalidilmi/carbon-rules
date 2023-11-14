@@ -1,0 +1,533 @@
+diff --git a/components/rule/org.wso2.carbon.rule.backend/src/main/java/org/wso2/carbon/rule/backend/drools/DroolsBackendRuntime.java b/components/rule/org.wso2.carbon.rule.backend/src/main/java/org/wso2/carbon/rule/backend/drools/DroolsBackendRuntime.java
+index 99975e2..4cae700 100644
+--- a/components/rule/org.wso2.carbon.rule.backend/src/main/java/org/wso2/carbon/rule/backend/drools/DroolsBackendRuntime.java
++++ b/components/rule/org.wso2.carbon.rule.backend/src/main/java/org/wso2/carbon/rule/backend/drools/DroolsBackendRuntime.java
+@@ -18,12 +18,19 @@ package org.wso2.carbon.rule.backend.drools;
+ 
+ import org.apache.commons.logging.Log;
+ import org.apache.commons.logging.LogFactory;
+-import org.drools.KnowledgeBase;
+-import org.drools.builder.*;
+-import org.drools.definition.KnowledgePackage;
+-import org.drools.io.ResourceFactory;
+-import org.drools.runtime.StatefulKnowledgeSession;
+-import org.drools.runtime.StatelessKnowledgeSession;
++//import org.drools.KnowledgeBase;
++//import org.drools.builder.*;
++//import org.drools.definition.KnowledgePackage;
++//import org.drools.io.ResourceFactory;
++//import org.drools.runtime.StatefulKnowledgeSession;
++//import org.drools.runtime.StatelessKnowledgeSession;
++import org.kie.api.KieBase;
++import org.kie.api.KieServices;
++import org.kie.api.builder.KieBuilder;
++import org.kie.api.builder.KieFileSystem;
++import org.kie.api.runtime.KieContainer;
++import org.kie.api.runtime.KieSession;
++import org.kie.internal.io.ResourceFactory;
+ import org.wso2.carbon.rule.backend.util.RuleSetLoader;
+ import org.wso2.carbon.rule.common.Rule;
+ import org.wso2.carbon.rule.common.RuleSet;
+@@ -39,19 +46,27 @@ import java.util.Collection;
+ public class DroolsBackendRuntime implements RuleBackendRuntime {
+ 
+     private static Log log = LogFactory.getLog(DroolsBackendRuntime.class);
+-    private KnowledgeBase knowledgeBase;
+-    private KnowledgeBuilder knowledgeBuilder;
++    private KieBase kieBase;
++    private KieServices kieServices;
+     private ClassLoader classLoader;
+ 
+-    public DroolsBackendRuntime(KnowledgeBase knowledgeBase,
+-                                KnowledgeBuilder knowledgeBuilder, ClassLoader classLoader) {
+-        this.knowledgeBase = knowledgeBase;
+-        this.knowledgeBuilder = knowledgeBuilder;
++//    public DroolsBackendRuntime(KnowledgeBase knowledgeBase,
++//                                KnowledgeBuilder knowledgeBuilder, ClassLoader classLoader) {
++//        this.knowledgeBase = knowledgeBase;
++//        this.knowledgeBuilder = knowledgeBuilder;
++//        this.classLoader = classLoader;
++//    }
++
++    public DroolsBackendRuntime(KieBase kieBase, KieServices kieServices, ClassLoader classLoader) {
++        this.kieBase = kieBase;
++        this.kieServices = kieServices;
+         this.classLoader = classLoader;
+     }
+ 
+     public void addRuleSet(RuleSet ruleSet) throws RuleConfigurationException {
+ 
++        KieFileSystem kieFileSystem = kieServices.newKieFileSystem();
++
+         for (Rule rule : ruleSet.getRules()) {
+             InputStream ruleInputStream = RuleSetLoader.getRuleSetAsStream(rule, classLoader);
+ 
+@@ -63,7 +78,8 @@ public class DroolsBackendRuntime implements RuleBackendRuntime {
+                             "Error in rule service configuration : Select \"dtable\" as Resource Type for decision tables "
+                                                                         + "or attached file is not supported by rule engine");
+                 } else {
+-                    this.knowledgeBuilder.add(ResourceFactory.newInputStreamResource(ruleInputStream), ResourceType.DRL);
++//                    this.knowledgeBuilder.add(ResourceFactory.newInputStreamResource(ruleInputStream), ResourceType.DRL);
++                    kieFileSystem.write(ResourceFactory.newInputStreamResource(ruleInputStream));
+                 }
+ 
+             } else if (rule.getResourceType().equals(Constants.RULE_RESOURCE_TYPE_DTABLE)) {
+@@ -75,47 +91,55 @@ public class DroolsBackendRuntime implements RuleBackendRuntime {
+                     throw new RuleConfigurationException(
+                             "Error in rule service configuration : Select \"regular\" as Resource Type for regular rules "
+                                                                         + "or attached file is not supported by rule engine");
+-                } else {
+-                    DecisionTableConfiguration dtconf = KnowledgeBuilderFactory.newDecisionTableConfiguration();
+-
+-                    //check whether the decision tables is base on .xsl file of .csv format (inline input or .csv file input)
+-                    if (rule.getSourceType().equalsIgnoreCase(Constants.RULE_SOURCE_TYPE_INLINE) ||
+-                                                                    rule.getValue().lastIndexOf(".csv") > 0) {
+-                        //decision table in .xls format
+-                        dtconf.setInputType(DecisionTableInputType.CSV);
+-                    } else {
+-                        //decision table in .xls format
+-                        dtconf.setInputType(DecisionTableInputType.XLS);
+-                    }
+-                    this.knowledgeBuilder.add(ResourceFactory.newInputStreamResource(ruleInputStream),
+-                                              ResourceType.DTABLE, dtconf);
+                 }
++                //todo
++//                else {
++//                    DecisionTableConfiguration dtconf = KnowledgeBuilderFactory.newDecisionTableConfiguration();
++//
++//                    //check whether the decision tables is base on .xsl file of .csv format (inline input or .csv file input)
++//                    if (rule.getSourceType().equalsIgnoreCase(Constants.RULE_SOURCE_TYPE_INLINE) ||
++//                                                                    rule.getValue().lastIndexOf(".csv") > 0) {
++//                        //decision table in .xls format
++//                        dtconf.setInputType(DecisionTableInputType.CSV);
++//                    } else {
++//                        //decision table in .xls format
++//                        dtconf.setInputType(DecisionTableInputType.XLS);
++//                    }
++//                    this.knowledgeBuilder.add(ResourceFactory.newInputStreamResource(ruleInputStream),
++//                                              ResourceType.DTABLE, dtconf);
++//                }
+ 
+             }
+ 
+-            if (this.knowledgeBuilder.hasErrors()) {
+-                throw new RuleConfigurationException("Error during creating rule set: " +
+-                        this.knowledgeBuilder.getErrors());
+-            }
+-
+-            Collection<KnowledgePackage> pkgs = this.knowledgeBuilder.getKnowledgePackages();
+-            this.knowledgeBase.addKnowledgePackages(pkgs);
++//            if (this.knowledgeBuilder.hasErrors()) {
++//                throw new RuleConfigurationException("Error during creating rule set: " +
++//                        this.knowledgeBuilder.getErrors());
++//            }
++//
++//            Collection<KnowledgePackage> pkgs = this.knowledgeBuilder.getKnowledgePackages();
++//            this.knowledgeBase.addKnowledgePackages(pkgs);
+         }
+ 
+     }
+ 
+     public Session createSession(int type) throws RuleRuntimeException {
+ 
+-        Session sesson;
++//        Session sesson;
++        KieSession kieSession;
+         if (type == Constants.RULE_STATEFUL_SESSION) {
+ 
+-            StatefulKnowledgeSession ruleSession =
+-                    this.knowledgeBase.newStatefulKnowledgeSession();
+-
+-            if (ruleSession == null) {
++//            StatefulKnowledgeSession ruleSession =
++//                    this.knowledgeBase.newStatefulKnowledgeSession();
++//
++//            if (ruleSession == null) {
++//                throw new RuleRuntimeException("The created stateful rule session is null");
++//            }
++//            sesson = new DroolsStatefulSession(ruleSession);
++            kieSession = this.kieBase.newKieSession();
++            if (kieSession == null) {
+                 throw new RuleRuntimeException("The created stateful rule session is null");
+             }
+-            sesson = new DroolsStatefulSession(ruleSession);
++            return new DroolsStatefulSession(kieSession);
+         } else {
+             if (log.isDebugEnabled()) {
+                 log.debug("Using stateless rule session");
+@@ -129,14 +153,19 @@ public class DroolsBackendRuntime implements RuleBackendRuntime {
+             StatelessKnowledgeSession ruleSession = knowledgeBase.newStatelessKnowledgeSession();
+             */
+ 
+-            StatefulKnowledgeSession ruleSession = knowledgeBase.newStatefulKnowledgeSession();
++//            StatefulKnowledgeSession ruleSession = knowledgeBase.newStatefulKnowledgeSession();
++            kieSession = this.kieBase.newKieSession();
+ 
+-            if (ruleSession == null) {
++//            if (ruleSession == null) {
++//                throw new RuleRuntimeException("The created stateless rule session is null");
++//            }
++//            sesson = new DroolsStatelessSession(ruleSession);
++            if (kieSession == null) {
+                 throw new RuleRuntimeException("The created stateless rule session is null");
+             }
+-            sesson = new DroolsStatelessSession(ruleSession);
++            return new DroolsStatelessSession(kieSession);
+         }
+-        return sesson;
++//        return sesson;
+     }
+ 
+ 
+diff --git a/components/rule/org.wso2.carbon.rule.backend/src/main/java/org/wso2/carbon/rule/backend/drools/DroolsBackendRuntimeFactory.java b/components/rule/org.wso2.carbon.rule.backend/src/main/java/org/wso2/carbon/rule/backend/drools/DroolsBackendRuntimeFactory.java
+index 254440a..3976abf 100644
+--- a/components/rule/org.wso2.carbon.rule.backend/src/main/java/org/wso2/carbon/rule/backend/drools/DroolsBackendRuntimeFactory.java
++++ b/components/rule/org.wso2.carbon.rule.backend/src/main/java/org/wso2/carbon/rule/backend/drools/DroolsBackendRuntimeFactory.java
+@@ -16,12 +16,21 @@
+ 
+ package org.wso2.carbon.rule.backend.drools;
+ 
+-import org.drools.KnowledgeBase;
+-import org.drools.KnowledgeBaseConfiguration;
+-import org.drools.KnowledgeBaseFactory;
+-import org.drools.builder.KnowledgeBuilder;
+-import org.drools.builder.KnowledgeBuilderConfiguration;
+-import org.drools.builder.KnowledgeBuilderFactory;
++//import org.drools.KnowledgeBase;
++//import org.drools.KnowledgeBaseConfiguration;
++//import org.drools.KnowledgeBaseFactory;
++//import org.drools.builder.KnowledgeBuilder;
++//import org.drools.builder.KnowledgeBuilderConfiguration;
++//import org.drools.builder.KnowledgeBuilderFactory;
++import org.kie.api.KieServices;
++import org.kie.api.builder.KieBuilder;
++import org.kie.api.builder.KieFileSystem;
++import org.kie.api.builder.KieRepository;
++import org.kie.api.builder.Message;
++import org.kie.api.builder.Results;
++import org.kie.api.builder.model.KieModuleModel;
++import org.kie.api.runtime.KieContainer;
++import org.kie.api.runtime.KieSessionConfiguration;
+ import org.wso2.carbon.rule.kernel.backend.RuleBackendRuntime;
+ import org.wso2.carbon.rule.kernel.backend.RuleBackendRuntimeFactory;
+ 
+@@ -39,19 +48,48 @@ public class DroolsBackendRuntimeFactory implements RuleBackendRuntimeFactory{
+         Properties knowledgeBaseProperties = new Properties();
+         knowledgeBaseProperties.putAll(properties);
+ 
+-        KnowledgeBaseConfiguration knowledgeBaseConfiguration
+-                = KnowledgeBaseFactory.newKnowledgeBaseConfiguration(knowledgeBaseProperties, classLoader);
++        // Create KieServices which is the entry point of KIE API
++        KieServices kieServices = KieServices.Factory.get();
++        // Create KieFileSystem and add resources
++        KieFileSystem kfs = kieServices.newKieFileSystem();
+ 
+-        KnowledgeBase knowledgeBase = KnowledgeBaseFactory.newKnowledgeBase(
+-                knowledgeBaseConfiguration);
+-        KnowledgeBuilderConfiguration builderConfiguration
+-                = KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration();
+ 
+-        KnowledgeBuilder knowledgeBuilder = KnowledgeBuilderFactory.newKnowledgeBuilder(
+-                builderConfiguration);
++//        KnowledgeBaseConfiguration knowledgeBaseConfiguration
++//                = KnowledgeBaseFactory.newKnowledgeBaseConfiguration(knowledgeBaseProperties, classLoader);
++//
++//        KnowledgeBase knowledgeBase = KnowledgeBaseFactory.newKnowledgeBase(
++//                knowledgeBaseConfiguration);
++//        KnowledgeBuilderConfiguration builderConfiguration
++//                = KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration();
++//
++//        KnowledgeBuilder knowledgeBuilder = KnowledgeBuilderFactory.newKnowledgeBuilder(
++//                builderConfiguration);
++
++
++        // Add properties to KieFileSystem
++        // This is a new approach in Drools 8.x as compared to using KnowledgeBaseConfiguration
++        for (Map.Entry<String, String> property : properties.entrySet()) {
++            kfs.writeKModuleXML(property.getKey() + "=" + property.getValue());
++        }
++
++        KieBuilder kieBuilder = kieServices.newKieBuilder(kfs);
++        kieBuilder.buildAll();
++        Results results = kieBuilder.getResults();
++
++        if (results.hasMessages(Message.Level.ERROR)) {
++            throw new RuntimeException("Build Errors:\n" + results.getMessages());
++        }
++
++        KieContainer kieContainer = kieServices.newKieContainer(kieServices.getRepository().getDefaultReleaseId());
++
++        KieSessionConfiguration sessionConfig = kieServices.newKieSessionConfiguration();
++//         todo set properties
++//        sessionConfig.setProperties(knowledgeBaseProperties);
++
+ 
+         Thread.currentThread().setContextClassLoader(existingClassLoader);
+         
+-        return new DroolsBackendRuntime(knowledgeBase, knowledgeBuilder , classLoader);
++//        return new DroolsBackendRuntime(knowledgeBase, knowledgeBuilder , classLoader);
++        return new DroolsBackendRuntime(kieContainer.getKieBase(), kieServices , classLoader);
+     }
+ }
+diff --git a/components/rule/org.wso2.carbon.rule.backend/src/main/java/org/wso2/carbon/rule/backend/drools/DroolsStatefulSession.java b/components/rule/org.wso2.carbon.rule.backend/src/main/java/org/wso2/carbon/rule/backend/drools/DroolsStatefulSession.java
+index 2b1aa05..29ae7b9 100644
+--- a/components/rule/org.wso2.carbon.rule.backend/src/main/java/org/wso2/carbon/rule/backend/drools/DroolsStatefulSession.java
++++ b/components/rule/org.wso2.carbon.rule.backend/src/main/java/org/wso2/carbon/rule/backend/drools/DroolsStatefulSession.java
+@@ -16,7 +16,8 @@
+ 
+ package org.wso2.carbon.rule.backend.drools;
+ 
+-import org.drools.runtime.StatefulKnowledgeSession;
++//import org.drools.runtime.StatefulKnowledgeSession;
++import org.kie.api.runtime.KieSession;
+ import org.wso2.carbon.rule.kernel.backend.Session;
+ 
+ import java.util.ArrayList;
+@@ -25,19 +26,23 @@ import java.util.List;
+ 
+ public class DroolsStatefulSession implements Session {
+ 
+-    private StatefulKnowledgeSession statefulKnowledgeSession;
++//    private StatefulKnowledgeSession statefulKnowledgeSession;
++    private KieSession kieSession;
+ 
+-    public DroolsStatefulSession(StatefulKnowledgeSession statefulKnowledgeSession) {
+-        this.statefulKnowledgeSession = statefulKnowledgeSession;
++//    public DroolsStatefulSession(StatefulKnowledgeSession statefulKnowledgeSession) {
++//        this.statefulKnowledgeSession = statefulKnowledgeSession;
++//    }
++    public DroolsStatefulSession(KieSession kieSession) {
++        this.kieSession = kieSession;
+     }
+ 
+     public List execute(List facts) {
+ 
+         for (Object fact : facts) {
+-            this.statefulKnowledgeSession.insert(fact);
++            this.kieSession.insert(fact);
+         }
+-        this.statefulKnowledgeSession.fireAllRules();
+-        Iterator results = this.statefulKnowledgeSession.getObjects().iterator();
++        this.kieSession.fireAllRules();
++        Iterator results = this.kieSession.getObjects().iterator();
+         List<Object> tobeReturn = new ArrayList<Object>();
+         while (results.hasNext()) {
+             Object result = results.next();
+@@ -48,7 +53,31 @@ public class DroolsStatefulSession implements Session {
+         return tobeReturn;
+     }
+ 
++    //chatGPT suggested more correct code
++//    public List<Object> execute(List<Object> facts) {
++//        List<Object> toReturn = new ArrayList<>();
++//
++//        // Insert each fact into the session
++//        for (Object fact : facts) {
++//            kieSession.insert(fact);
++//        }
++//
++//        // Fire all rules
++//        kieSession.fireAllRules();
++//
++//        // **** Collect the objects from the session
++//        Collection<?> objects = kieSession.getObjects();
++//        for (Object object : objects) {
++//            if (object != null) {
++//                toReturn.add(object);
++//            }
++//        }
++//
++//        return toReturn;
++//    }
++
+     public void destroy() {
+-        statefulKnowledgeSession.dispose();
++//        statefulKnowledgeSession.dispose();
++        kieSession.dispose();
+     }
+ }
+diff --git a/components/rule/org.wso2.carbon.rule.backend/src/main/java/org/wso2/carbon/rule/backend/drools/DroolsStatelessSession.java b/components/rule/org.wso2.carbon.rule.backend/src/main/java/org/wso2/carbon/rule/backend/drools/DroolsStatelessSession.java
+index 9636068..24cc498 100644
+--- a/components/rule/org.wso2.carbon.rule.backend/src/main/java/org/wso2/carbon/rule/backend/drools/DroolsStatelessSession.java
++++ b/components/rule/org.wso2.carbon.rule.backend/src/main/java/org/wso2/carbon/rule/backend/drools/DroolsStatelessSession.java
+@@ -16,7 +16,9 @@
+ 
+ package org.wso2.carbon.rule.backend.drools;
+ 
+-import org.drools.runtime.StatefulKnowledgeSession;
++//import org.drools.runtime.StatefulKnowledgeSession;
++import org.kie.api.runtime.KieContainer;
++import org.kie.api.runtime.KieSession;
+ import org.wso2.carbon.rule.kernel.backend.Session;
+ 
+ import java.util.ArrayList;
+@@ -36,20 +38,27 @@ public class DroolsStatelessSession implements Session {
+ 
+         private StatelessKnowledgeSession statelessKnowledgeSession;
+     */
+-    private StatefulKnowledgeSession statefulKnowledgeSession;
++//    private StatefulKnowledgeSession statefulKnowledgeSession;
++    private KieSession kieSession;
+ 
+-    public DroolsStatelessSession(StatefulKnowledgeSession knowledgeSession) {
+-        this.statefulKnowledgeSession = knowledgeSession;
++//    public DroolsStatelessSession(StatefulKnowledgeSession knowledgeSession) {
++//        this.statefulKnowledgeSession = knowledgeSession;
++//    }
++    public DroolsStatelessSession(KieSession kieSession) {
++        this.kieSession = kieSession;
+     }
+ 
+     public List execute(List facts) {
+ 
+         for (Object fact : facts) {
+-            this.statefulKnowledgeSession.insert(fact);
++//            this.statefulKnowledgeSession.insert(fact);
++            this.kieSession.insert(fact);
+         }
+-        this.statefulKnowledgeSession.fireAllRules();
++//        this.statefulKnowledgeSession.fireAllRules();
++        this.kieSession.fireAllRules();
+ 
+-        Iterator results = this.statefulKnowledgeSession.getObjects().iterator();
++//        Iterator results = this.statefulKnowledgeSession.getObjects().iterator();
++        Iterator results = this.kieSession.getObjects().iterator();
+         List<Object> tobeReturn = new ArrayList<Object>();
+         while (results.hasNext()) {
+             Object result = results.next();
+@@ -65,7 +74,8 @@ public class DroolsStatelessSession implements Session {
+     }
+ 
+     public void destroy() {
+-        statefulKnowledgeSession.dispose();
++//        statefulKnowledgeSession.dispose();
++        kieSession.dispose();
+     }
+ 
+     
+diff --git a/pom.xml b/pom.xml
+index 04f1ee1..a3c63d9 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -379,7 +379,7 @@
+ 		<plugin>
+                     <groupId>org.jacoco</groupId>
+                     <artifactId>jacoco-maven-plugin</artifactId>
+-                    <version>0.8.0</version>
++                    <version>0.8.8</version>
+                     <executions>
+                         <execution>
+                             <id>default-prepare-agent-by-coverage-enforcer</id>
+@@ -426,42 +426,66 @@
+         |
+     -->
+     <repositories>
+-        <!-- Before adding ANYTHING in here, please start a discussion on the dev list.
+-             Ideally the Axis2 build should only use Maven central (which is available
+-             by default) and nothing else. We had troubles with other repositories in
+-             the past. Therefore configuring additional repositories here should be
+-             considered very carefully. -->
+-        <!-- Before adding ANYTHING in here, please start a discussion on the dev list.
+-                     Ideally the Axis2 build should only use Maven central (which is available
+-                     by default) and nothing else. We had troubles with other repositories in
+-                     the past. Therefore configuring additional repositories here should be
+-                     considered very carefully. -->
+         <repository>
+-            <id>wso2-nexus</id>
+-            <name>WSO2 internal Repository</name>
+-            <url>http://maven.wso2.org/nexus/content/groups/wso2-public/</url>
++            <id>updates2-nexus</id>
++            <name>Support Nexus Repository of WSO2</name>
++            <url>https://support-maven.wso2.org/nexus/content/repositories/updates-2.0/</url>
+             <releases>
+                 <enabled>true</enabled>
+                 <updatePolicy>daily</updatePolicy>
+-                <checksumPolicy>ignore</checksumPolicy>
++                <checksumPolicy>fail</checksumPolicy>
+             </releases>
++            <snapshots>
++                <enabled>true</enabled>
++            </snapshots>
+         </repository>
+ 
+         <repository>
+-            <id>wso2.releases</id>
++            <id>uat-nexus-internal-public</id>
++            <url>https://support-maven.wso2.org/nexus/content/groups/public</url>
++            <releases>
++                <enabled>false</enabled>
++            </releases>
++            <snapshots>
++                <enabled>false</enabled>
++            </snapshots>
++        </repository>
++        <repository>
++            <id>uat-nexus-internal-repositories</id>
++            <url>https://support-maven.wso2.org/nexus/content/repositories/releases/</url>
++            <releases>
++                <enabled>true</enabled>
++            </releases>
++            <snapshots>
++                <enabled>true</enabled>
++            </snapshots>
++        </repository>
++        <repository>
++            <id>uat-nexus-internal-snapshots</id>
++            <url>https://support-maven.wso2.org/nexus/content/repositories/snapshots/</url>
++            <releases>
++                <enabled>false</enabled>
++            </releases>
++            <snapshots>
++                <enabled>true</enabled>
++                <updatePolicy>daily</updatePolicy>
++                <checksumPolicy>daily</checksumPolicy>
++            </snapshots>
++        </repository>
++        <repository>
++            <id>wso2releases</id>
+             <name>WSO2 internal Repository</name>
+-            <url>http://maven.wso2.org/nexus/content/repositories/releases/</url>
++            <url>https://maven.wso2.org/nexus/content/repositories/releases/</url>
+             <releases>
+                 <enabled>true</enabled>
+                 <updatePolicy>daily</updatePolicy>
+                 <checksumPolicy>ignore</checksumPolicy>
+             </releases>
+         </repository>
+-
+         <repository>
+-            <id>wso2.snapshots</id>
+-            <name>WSO2 Snapshot Repository</name>
+-            <url>http://maven.wso2.org/nexus/content/repositories/snapshots/</url>
++            <id>wso2snapshots</id>
++            <name>Apache Snapshot Repository</name>
++            <url>https://maven.wso2.org/nexus/content/repositories/snapshots/</url>
+             <snapshots>
+                 <enabled>true</enabled>
+                 <updatePolicy>daily</updatePolicy>
+@@ -470,6 +494,16 @@
+                 <enabled>false</enabled>
+             </releases>
+         </repository>
++        <repository>
++            <id>wso2nexus</id>
++            <name>WSO2 internal Repository</name>
++            <url>https://maven.wso2.org/nexus/content/groups/wso2-public/</url>
++            <releases>
++                <enabled>true</enabled>
++                <updatePolicy>daily</updatePolicy>
++                <checksumPolicy>ignore</checksumPolicy>
++            </releases>
++        </repository>
+     </repositories>
+ 
+     <pluginRepositories>
+@@ -554,7 +588,7 @@
+ 
+ 
+         <!-- Drools Versions -->
+-        <orbit.version.drools>6.3.0.wso2v1</orbit.version.drools>
++        <orbit.version.drools>8.44.0.wso2v1</orbit.version.drools>
+         <orbit.version.jsr94>1.1.0.wso2v1</orbit.version.jsr94>
+         <poi.orbit.version>3.17.0.wso2v1</poi.orbit.version>
+         <orbit.version.janino>2.5.15.wso2v1</orbit.version.janino>

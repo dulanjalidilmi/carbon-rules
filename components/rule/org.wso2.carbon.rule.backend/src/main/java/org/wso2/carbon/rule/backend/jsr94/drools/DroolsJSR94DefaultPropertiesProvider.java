@@ -17,7 +17,7 @@
 package org.wso2.carbon.rule.backend.jsr94.drools;
 
 import org.wso2.carbon.rule.kernel.backend.DefaultPropertiesProvider;
-import org.drools.jsr94.rules.Constants;
+//import org.drools.jsr94.rules.Constants;
 import org.drools.core.RuleBaseConfiguration;
 import org.drools.compiler.builder.impl.KnowledgeBuilderConfigurationImpl;
 
@@ -47,11 +47,11 @@ public class DroolsJSR94DefaultPropertiesProvider implements DefaultPropertiesPr
             ClassLoader propertyClassLoader) {
        // PackageBuilderConfiguration configuration =
          //       new PackageBuilderConfiguration(propertyClassLoader);
-        KnowledgeBuilderConfigurationImpl configuration = new KnowledgeBuilderConfigurationImpl(propertyClassLoader);
+//        KnowledgeBuilderConfigurationImpl configuration = new KnowledgeBuilderConfigurationImpl(propertyClassLoader);
         Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put(Constants.RES_PACKAGEBUILDER_CONFIG, configuration);
-        RuleBaseConfiguration baseConfiguration = new RuleBaseConfiguration(propertyClassLoader);
-        properties.put(Constants.RES_RULEBASE_CONFIG, baseConfiguration);
+//        properties.put(Constants.RES_PACKAGEBUILDER_CONFIG, configuration);
+//        RuleBaseConfiguration baseConfiguration = new RuleBaseConfiguration(propertyClassLoader);
+//        properties.put(Constants.RES_RULEBASE_CONFIG, baseConfiguration);
         return properties;
     }
 }

@@ -80,8 +80,10 @@ public class RuleMediator extends AbstractMediator {
             RuleSession ruleSession;
             if (this.session == null || Constants.RULE_STATELESS_SESSION_TYPE.equals(
                     this.session.getAttributeValue(Constants.RULE_SESSION_TYPE_QNAME))) {
+                System.out.println("stateless session");
                 ruleSession = ruleEngine.createSession(Constants.RULE_STATELESS_SESSION);
             } else {
+                System.out.println("stateful session");
                 ruleSession = ruleEngine.createSession(Constants.RULE_STATEFUL_SESSION);
             }
 
