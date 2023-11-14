@@ -16,12 +16,16 @@
 
 package org.wso2.carbon.rule.backend.drools;
 
-import org.drools.KnowledgeBase;
-import org.drools.KnowledgeBaseConfiguration;
-import org.drools.KnowledgeBaseFactory;
-import org.drools.builder.KnowledgeBuilder;
-import org.drools.builder.KnowledgeBuilderConfiguration;
-import org.drools.builder.KnowledgeBuilderFactory;
+//import org.drools.KnowledgeBase;
+//import org.drools.KnowledgeBaseConfiguration;
+//import org.drools.KnowledgeBaseFactory;
+//import org.drools.builder.KnowledgeBuilder;
+//import org.drools.builder.KnowledgeBuilderConfiguration;
+//import org.drools.builder.KnowledgeBuilderFactory;
+import org.kie.api.KieBase;
+import org.kie.api.KieServices;
+import org.kie.api.runtime.KieContainer;
+import org.kie.api.runtime.KieSession;
 import org.wso2.carbon.rule.kernel.backend.RuleBackendRuntime;
 import org.wso2.carbon.rule.kernel.backend.RuleBackendRuntimeFactory;
 
@@ -39,19 +43,24 @@ public class DroolsBackendRuntimeFactory implements RuleBackendRuntimeFactory{
         Properties knowledgeBaseProperties = new Properties();
         knowledgeBaseProperties.putAll(properties);
 
-        KnowledgeBaseConfiguration knowledgeBaseConfiguration
-                = KnowledgeBaseFactory.newKnowledgeBaseConfiguration(knowledgeBaseProperties, classLoader);
+        KieServices ks = KieServices.Factory.get();
+        KieContainer kcontainer = ks.getKieClasspathContainer();
+        KieBase kbase = kcontainer.getKieBase();
+//        KieSession ksession = kbase.newKieSession();
 
-        KnowledgeBase knowledgeBase = KnowledgeBaseFactory.newKnowledgeBase(
-                knowledgeBaseConfiguration);
-        KnowledgeBuilderConfiguration builderConfiguration
-                = KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration();
-
-        KnowledgeBuilder knowledgeBuilder = KnowledgeBuilderFactory.newKnowledgeBuilder(
-                builderConfiguration);
+//        KnowledgeBaseConfiguration knowledgeBaseConfiguration
+//                = KnowledgeBaseFactory.newKnowledgeBaseConfiguration(knowledgeBaseProperties, classLoader);
+//
+//        KnowledgeBase knowledgeBase = KnowledgeBaseFactory.newKnowledgeBase(
+//                knowledgeBaseConfiguration);
+//        KnowledgeBuilderConfiguration builderConfiguration
+//                = KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration();
+//
+//        KnowledgeBuilder knowledgeBuilder = KnowledgeBuilderFactory.newKnowledgeBuilder(
+//                builderConfiguration);
 
         Thread.currentThread().setContextClassLoader(existingClassLoader);
         
-        return new DroolsBackendRuntime(knowledgeBase, knowledgeBuilder , classLoader);
+        return new DroolsBackendRuntime(kbase, ks , classLoader);
     }
 }

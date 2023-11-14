@@ -16,7 +16,7 @@
 
 package org.wso2.carbon.rule.backend.drools;
 
-import org.drools.runtime.StatefulKnowledgeSession;
+//import org.drools.runtime.StatefulKnowledgeSession;
 import org.wso2.carbon.rule.kernel.backend.Session;
 
 import java.util.ArrayList;
@@ -25,30 +25,30 @@ import java.util.List;
 
 public class DroolsStatefulSession implements Session {
 
-    private StatefulKnowledgeSession statefulKnowledgeSession;
+//    private StatefulKnowledgeSession statefulKnowledgeSession;
 
-    public DroolsStatefulSession(StatefulKnowledgeSession statefulKnowledgeSession) {
-        this.statefulKnowledgeSession = statefulKnowledgeSession;
-    }
+//    public DroolsStatefulSession(StatefulKnowledgeSession statefulKnowledgeSession) {
+//        this.statefulKnowledgeSession = statefulKnowledgeSession;
+//    }
 
     public List execute(List facts) {
 
         for (Object fact : facts) {
-            this.statefulKnowledgeSession.insert(fact);
+//            this.statefulKnowledgeSession.insert(fact);
         }
-        this.statefulKnowledgeSession.fireAllRules();
-        Iterator results = this.statefulKnowledgeSession.getObjects().iterator();
+//        this.statefulKnowledgeSession.fireAllRules();
+//        Iterator results = this.statefulKnowledgeSession.getObjects().iterator();
         List<Object> tobeReturn = new ArrayList<Object>();
-        while (results.hasNext()) {
-            Object result = results.next();
-            if (result != null) {
-                tobeReturn.add(result);
-            }
-        }
+//        while (results.hasNext()) {
+//            Object result = results.next();
+//            if (result != null) {
+//                tobeReturn.add(result);
+//            }
+//        }
         return tobeReturn;
     }
 
     public void destroy() {
-        statefulKnowledgeSession.dispose();
+//        statefulKnowledgeSession.dispose();
     }
 }

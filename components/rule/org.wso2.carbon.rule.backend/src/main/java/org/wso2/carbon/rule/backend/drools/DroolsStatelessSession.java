@@ -16,7 +16,7 @@
 
 package org.wso2.carbon.rule.backend.drools;
 
-import org.drools.runtime.StatefulKnowledgeSession;
+//import org.drools.runtime.StatefulKnowledgeSession;
 import org.wso2.carbon.rule.kernel.backend.Session;
 
 import java.util.ArrayList;
@@ -36,36 +36,37 @@ public class DroolsStatelessSession implements Session {
 
         private StatelessKnowledgeSession statelessKnowledgeSession;
     */
-    private StatefulKnowledgeSession statefulKnowledgeSession;
+//    private StatefulKnowledgeSession statefulKnowledgeSession;
 
-    public DroolsStatelessSession(StatefulKnowledgeSession knowledgeSession) {
-        this.statefulKnowledgeSession = knowledgeSession;
-    }
+//    public DroolsStatelessSession(StatefulKnowledgeSession knowledgeSession) {
+//        this.statefulKnowledgeSession = knowledgeSession;
+//    }
 
     public List execute(List facts) {
 
         for (Object fact : facts) {
-            this.statefulKnowledgeSession.insert(fact);
+//            this.statefulKnowledgeSession.insert(fact);
         }
-        this.statefulKnowledgeSession.fireAllRules();
+//        this.statefulKnowledgeSession.fireAllRules();
 
-        Iterator results = this.statefulKnowledgeSession.getObjects().iterator();
-        List<Object> tobeReturn = new ArrayList<Object>();
-        while (results.hasNext()) {
-            Object result = results.next();
-            if (result != null) {
-                tobeReturn.add(result);
-            }
-        }
+//        Iterator results = this.statefulKnowledgeSession.getObjects().iterator();
+//        List<Object> tobeReturn = new ArrayList<Object>();
+//        while (results.hasNext()) {
+//            Object result = results.next();
+//            if (result != null) {
+//                tobeReturn.add(result);
+//            }
+//        }
 
         //Destroy/Dispose stateful knowledge session since we use it for stateless usage
         destroy();
 
-        return tobeReturn;
+//        return tobeReturn;
+        return null;
     }
 
     public void destroy() {
-        statefulKnowledgeSession.dispose();
+//        statefulKnowledgeSession.dispose();
     }
 
     
