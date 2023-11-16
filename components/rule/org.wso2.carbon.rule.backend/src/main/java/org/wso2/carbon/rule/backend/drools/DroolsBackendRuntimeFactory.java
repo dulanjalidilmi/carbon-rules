@@ -24,11 +24,15 @@ package org.wso2.carbon.rule.backend.drools;
 //import org.drools.builder.KnowledgeBuilderFactory;
 import org.kie.api.KieBase;
 import org.kie.api.KieServices;
+import org.kie.api.builder.KieFileSystem;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
+import org.wso2.carbon.rule.backend.util.RuleSetLoader;
 import org.wso2.carbon.rule.kernel.backend.RuleBackendRuntime;
 import org.wso2.carbon.rule.kernel.backend.RuleBackendRuntimeFactory;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.Map;
 import java.util.Properties;
 
@@ -40,12 +44,20 @@ public class DroolsBackendRuntimeFactory implements RuleBackendRuntimeFactory{
         ClassLoader existingClassLoader = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(classLoader);
 
-        Properties knowledgeBaseProperties = new Properties();
-        knowledgeBaseProperties.putAll(properties);
+//        Properties knowledgeBaseProperties = new Properties();
+//        knowledgeBaseProperties.putAll(properties);
 
         KieServices ks = KieServices.Factory.get();
-        KieContainer kcontainer = ks.getKieClasspathContainer();
-        KieBase kbase = kcontainer.getKieBase();
+        KieFileSystem kfs = ks.newKieFileSystem();
+
+//        kfs.write(ks.getResources().newInputStreamResource(RuleSetLoader.getRuleSetAsStream()));
+
+
+
+//        KieContainer kcontainer = ks.getKieClasspathContainer();
+//        KieBase kbase = kcontainer.getKieBase();
+
+
 //        KieSession ksession = kbase.newKieSession();
 
 //        KnowledgeBaseConfiguration knowledgeBaseConfiguration
@@ -61,6 +73,6 @@ public class DroolsBackendRuntimeFactory implements RuleBackendRuntimeFactory{
 
         Thread.currentThread().setContextClassLoader(existingClassLoader);
         
-        return new DroolsBackendRuntime(kbase, ks , classLoader);
+        return new DroolsBackendRuntime(ks, kfs , classLoader);
     }
 }

@@ -18,6 +18,7 @@ package org.wso2.carbon.rule.backend.drools;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.drools.modelcompiler.ExecutableModelProject;
 //import org.drools.KnowledgeBase;
 //import org.drools.builder.*;
 //import org.drools.definition.KnowledgePackage;
@@ -25,7 +26,10 @@ import org.apache.commons.logging.LogFactory;
 //import org.drools.runtime.StatefulKnowledgeSession;
 //import org.drools.runtime.StatelessKnowledgeSession;
 import org.kie.api.*;
+import org.kie.api.builder.KieFileSystem;
+import org.kie.api.builder.ReleaseId;
 import org.kie.api.runtime.*;
+import org.kie.internal.io.ResourceFactory;
 import org.wso2.carbon.rule.backend.util.RuleSetLoader;
 import org.wso2.carbon.rule.common.Rule;
 import org.wso2.carbon.rule.common.RuleSet;
@@ -35,6 +39,8 @@ import org.wso2.carbon.rule.common.util.Constants;
 import org.wso2.carbon.rule.kernel.backend.RuleBackendRuntime;
 import org.wso2.carbon.rule.kernel.backend.Session;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Collection;
 
@@ -43,13 +49,13 @@ public class DroolsBackendRuntime implements RuleBackendRuntime {
     private static Log log = LogFactory.getLog(DroolsBackendRuntime.class);
 //    private KnowledgeBase knowledgeBase;
 //    private KnowledgeBuilder knowledgeBuilder;
-    private KieBase kieBase;
     private KieServices kieServices;
+    private KieFileSystem kieFileSystem;
     private ClassLoader classLoader;
 
-    public DroolsBackendRuntime(KieBase kieBase, KieServices kieServices, ClassLoader classLoader) {
-        this.kieBase = kieBase;
+    public DroolsBackendRuntime(KieServices kieServices, KieFileSystem kieFileSystem, ClassLoader classLoader) {
         this.kieServices = kieServices;
+        this.kieFileSystem = kieFileSystem;
         this.classLoader = classLoader;
     }
 
@@ -66,6 +72,10 @@ public class DroolsBackendRuntime implements RuleBackendRuntime {
                             "Error in rule service configuration : Select \"dtable\" as Resource Type for decision tables "
                                                                         + "or attached file is not supported by rule engine");
                 } else {
+                    this.kieFileSystem.write(this.kieServices.getResources().newInputStreamResource(ruleInputStream));
+//                    kfs.write("src/main/resources/com/sample/Sample1.drl",
+//                            ks.getResources().newInputStreamResource(new FileInputStream(new File("work/Sample1.drl"))));
+
 //                    this.knowledgeBuilder.add(ResourceFactory.newInputStreamResource(ruleInputStream), ResourceType.DRL);
                 }
 
@@ -79,9 +89,12 @@ public class DroolsBackendRuntime implements RuleBackendRuntime {
                             "Error in rule service configuration : Select \"regular\" as Resource Type for regular rules "
                                                                         + "or attached file is not supported by rule engine");
                 } else {
-////                    DecisionTableConfiguration dtconf = KnowledgeBuilderFactory.newDecisionTableConfiguration();
-//
-//                    //check whether the decision tables is base on .xsl file of .csv format (inline input or .csv file input)
+                    this.kieFileSystem.write(this.kieServices.getResources().newInputStreamResource(ruleInputStream));
+//                    this.kieFileSystem.write(ResourceFactory.newInputStreamResource(ruleInputStream));
+
+//                    DecisionTableConfiguration dtconf = KnowledgeBuilderFactory.newDecisionTableConfiguration();
+
+                    //check whether the decision tables is base on .xsl file of .csv format (inline input or .csv file input)
 //                    if (rule.getSourceType().equalsIgnoreCase(Constants.RULE_SOURCE_TYPE_INLINE) ||
 //                                                                    rule.getValue().lastIndexOf(".csv") > 0) {
 //                        //decision table in .xls format
@@ -104,6 +117,18 @@ public class DroolsBackendRuntime implements RuleBackendRuntime {
 //            Collection<KnowledgePackage> pkgs = this.knowledgeBuilder.getKnowledgePackages();
 //            this.knowledgeBase.addKnowledgePackages(pkgs);
         }
+
+        ReleaseId releaseId = kieServices.newReleaseId("org.wso2", "rule-mediator", "1.0.0");
+        kieFileSystem.generateAndWritePomXML(releaseId);
+
+        // Now resources are built and stored into an internal repository
+        kieServices.newKieBuilder(kieFileSystem).buildAll(ExecutableModelProject.class);
+
+        // You can get a KieContainer with the ReleaseId
+        KieContainer kcontainer = kieServices.newKieContainer(releaseId);
+
+        // KieContainer can create a KieBase
+        KieBase kbase = kcontainer.getKieBase();
 
     }
 
